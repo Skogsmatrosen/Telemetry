@@ -4,7 +4,7 @@
 #include "battery.h"
 #include "radio.h"
 #include "telemetry.h"
-// komentar
+
 Accel accel(Pin::SDA, Pin::SCL);
 Battery battery(Pin::BMS, Cfg::BMS_R1, Cfg::BMS_R2);
 Radio radio(Cfg::RECEIVER_MAC);
