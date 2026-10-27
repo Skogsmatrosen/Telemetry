@@ -1,7 +1,14 @@
 {
     "folders": [
-        { "path": "Tele" },
-        { "path": "Reciever" },
+        {
+            "path": "Tele"
+        },
+        {
+            "path": "Reciever"
+        },
+        {
+            "path": "TeleDummy"
+        }
     ],
     "settings": {}
 }
