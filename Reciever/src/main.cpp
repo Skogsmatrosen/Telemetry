@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "radio.h"
+#include <math.h>
 
 Receiver receiver;
 
@@ -11,9 +12,23 @@ void setup() {
 
 void loop() {
     TelemetryPacket p;
+
     while (receiver.read(p)) {
-        Serial.printf("%lu,%lu,%.3f,%.3f,%.3f,%.2f\n",
-                      (unsigned long)p.seq, (unsigned long)p.timeMs,
-                      p.x, p.y, p.z, p.voltage);
+        if (!isfinite(p.x) ||
+            !isfinite(p.y) ||
+            !isfinite(p.voltage)) {
+            continue;
+        }
+
+        Serial.printf(
+            "{\"time_ms\":%lu,"
+            "\"ax_g\":%.3f,"
+            "\"ay_g\":%.3f,"
+            "\"battery_v\":%.2f}\n",
+            (unsigned long)p.timeMs,
+            p.x,
+            p.y,
+            p.voltage
+        );
     }
 }
