@@ -4,7 +4,7 @@
 #include "telemetry.h"
 
 // MAC-adressen til mottakeren
-uint8_t receiverMac[6] = {0x58, 0xE6, 0xC5, 0x20, 0x48, 0xD8};
+constexpr uint8_t receiverMac[6] = {0x20, 0x6E, 0xF1, 0x0C, 0x7B, 0x50};
 
 // Tilfeldig float mellom lo og hi
 float randf(float lo, float hi) {
