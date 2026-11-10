@@ -26,19 +26,15 @@ int Drivetrain::toPulse(int16_t value) {
     return 1500 + value / 2;          // -1000 -> 1000 µs, 0 -> 1500 µs, +1000 -> 2000 µs
 }
 
-void Drivetrain::update(uint16_t forwardRaw, uint16_t turnRaw) {
-    int16_t forward = toSigned(forwardRaw);
-    int16_t turn = toSigned(turnRaw);
+void Drivetrain::update(uint16_t leftRaw, uint16_t rightRaw) {
+    int16_t leftValue  = toSigned(leftRaw);    // -1000 … +1000, med deadband
+    int16_t rightValue = toSigned(rightRaw);
 
-    // Positiv sving = til høyre: venstre hjul raskere, høyre saktere
-    int16_t leftMix  = constrain(forward + turn, -1000, 1000);
-    int16_t rightMix = constrain(forward - turn, -1000, 1000);
+    if (invertLeft)  leftValue  = -leftValue;
+    if (invertRight) rightValue = -rightValue;
 
-    if (invertLeft)  leftMix  = -leftMix;
-    if (invertRight) rightMix = -rightMix;
-
-    left.writeUs(toPulse(leftMix));
-    right.writeUs(toPulse(rightMix));
+    left.writeUs(toPulse(leftValue));
+    right.writeUs(toPulse(rightValue));
 }
 
 void Drivetrain::stop() {

@@ -111,7 +111,7 @@ void loop() {
 
     // Motorer
     if (driveAllowed) {
-        drive.update(crsf.channel(Ch::FORWARD), crsf.channel(Ch::TURN));
+        drive.update(crsf.channel(Ch::LEFT), crsf.channel(Ch::RIGHT));
     } else {
         drive.stop();
     }

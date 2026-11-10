@@ -16,7 +16,7 @@ private:
 public:
     Drivetrain(int pinLeft, int pinRight, bool invertLeft = false, bool invertRight = false);
     bool setup();
-    void update(uint16_t forwardRaw, uint16_t turnRaw);
+    void update(uint16_t leftRaw, uint16_t rightRaw);
     void stop();
     int getLeftUs() const { return left.getUs(); }
     int getRightUs() const { return right.getUs(); }

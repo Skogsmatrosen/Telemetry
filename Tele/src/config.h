@@ -5,8 +5,8 @@
 namespace Pin {
     // Sensorer
     constexpr int SDA = 4;            // IMU: blå
-    constexpr int SCL = 3;            // IMU: gul
-    constexpr int BMS = 5;            // Batterimåling (må være ADC, GPIO 0–6)
+    constexpr int SCL = 5;            // IMU: gul
+    constexpr int BMS = 6;            // Batterimåling (må være ADC, GPIO 0–6)
 
     // ELRS-mottaker (CRSF)
     constexpr int CRSF_RX = 18;       // ← TX på ELRS-mottakeren
@@ -23,12 +23,12 @@ namespace Pin {
 
 // ---------- Kanaler på senderen (1–16) ----------
 namespace Ch {
-    constexpr uint8_t FORWARD     = 1;   // Gass fram/bak
-    constexpr uint8_t TURN        = 2;   // Sving
-    constexpr uint8_t MODE        = 6;   // 3-posisjon: SAFE / DRIVE / DRIVE+WEAPON
-    constexpr uint8_t FIRE        = 7;   // Fyr-knapp
-    constexpr uint8_t BATTLESHORT = 8;   // Manuell våpenkjøring
-    constexpr uint8_t WEAPON_POT  = 10;  // Potmeter for manuell fart
+    constexpr uint8_t LEFT        = 1;   // Venstre hjul (ferdig mikset på senderen)
+    constexpr uint8_t RIGHT       = 2;   // Høyre hjul
+    constexpr uint8_t MODE        = 6;
+    constexpr uint8_t FIRE        = 7;
+    constexpr uint8_t BATTLESHORT = 8;
+    constexpr uint8_t WEAPON_POT  = 10;
 }
 
 // ---------- Innstillinger ----------
