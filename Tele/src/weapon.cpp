@@ -22,7 +22,7 @@ bool Weapon::limitPressed() {
     return stable;
 }
 
-// Fart under fyring, styrt fra kontrolleren
+// Fart styrt fra glidebryteren, brukes både i fyring og manuell modus
 int Weapon::fireSpeed(uint16_t potRaw) const {
     uint16_t pot = constrain(potRaw, potLow, Cfg::CRSF_MAX);
     return map(pot, potLow, Cfg::CRSF_MAX, fireMinUs, fireMaxUs);
@@ -50,16 +50,20 @@ void Weapon::update(bool fireButton, bool battleshort, uint16_t potRaw, bool ena
     }
 
     switch (state) {
-    case MANUAL: {
+    case MANUAL:
+        // Motoren går bare mens fyr holdes inne, med samme fart som ved vanlig fyring.
+        // Etter at battleshort slås på må fyr først slippes.
         if (!manualReady) {
             esc.stop();
-            if (potRaw <= potLow) manualReady = true;
+            if (!fireButton) manualReady = true;
             break;
         }
-        uint16_t pot = constrain(potRaw, potLow, Cfg::CRSF_MAX);
-        esc.writeUs(map(pot, potLow, Cfg::CRSF_MAX, 1000, manualMaxUs));
+        if (fireButton) {
+            esc.writeUs(fireSpeed(potRaw));
+        } else {
+            esc.stop();
+        }
         break;
-    }
 
     case LOADED:
         esc.stop();

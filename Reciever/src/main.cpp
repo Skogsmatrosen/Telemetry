@@ -4,6 +4,9 @@
 
 Receiver receiver;
 
+// Utskrift: 0 = alle pakker (bruk dette til nettsiden), ellers ms mellom linjer (500 funker bra for testing)
+constexpr uint32_t PRINT_INTERVAL_MS = 500;
+
 const char* modeName(uint8_t m) {
     switch (m) {
         case 0: return "SAFE";
@@ -37,6 +40,12 @@ void loop() {
             !isfinite(p.z) || !isfinite(p.voltage)) {
             continue;
         }
+
+        static uint32_t lastPrint = 0;
+        if (PRINT_INTERVAL_MS > 0 && millis() - lastPrint < PRINT_INTERVAL_MS) {
+            continue;   // hopp over utskrift, men pakken er lest
+        }
+        lastPrint = millis();
 
         Serial.printf(
             "{\"time_ms\":%lu,"

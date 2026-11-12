@@ -27,7 +27,7 @@ namespace Ch {
     constexpr uint8_t RIGHT       = 2;   // Høyre hjul
     constexpr uint8_t MODE        = 6;
     constexpr uint8_t FIRE        = 9;
-    constexpr uint8_t BATTLESHORT = 8;
+    constexpr uint8_t BATTLESHORT = 5;
     constexpr uint8_t WEAPON_POT  = 10;
 }
 
@@ -47,6 +47,6 @@ namespace Cfg {
     constexpr uint16_t CRSF_MAX    = 1811;
 
     // Grenser for 3-posisjons modusbryter (rå CRSF)
-    constexpr uint16_t MODE_SAFE_MAX  = 600;
-    constexpr uint16_t MODE_DRIVE_MAX = 1400;
+    static constexpr uint16_t MODE_SAFE_MAX  = 512;   // under ca. 1200 µs = SAFE
+    static constexpr uint16_t MODE_DRIVE_MAX = 1472;  // opp til ca. 1800 µs = DRIVE, over = DRIVE+WEAPON
 }
