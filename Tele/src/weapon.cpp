@@ -22,10 +22,11 @@ bool Weapon::limitPressed() {
     return stable;
 }
 
-// Fart styrt fra glidebryteren, brukes både i fyring og manuell modus
+// Fart fra glidebryteren: CRSF-verdien regnes om til µs, som EdgeTX viser,
+// og begrenses til området motoren skal brukes i.
 int Weapon::fireSpeed(uint16_t potRaw) const {
-    uint16_t pot = constrain(potRaw, potLow, Cfg::CRSF_MAX);
-    return map(pot, potLow, Cfg::CRSF_MAX, fireMinUs, fireMaxUs);
+    int us = (int)(5L * potRaw / 8) + 880;
+    return constrain(us, fireMinUs, fireMaxUs);
 }
 
 void Weapon::update(bool fireButton, bool battleshort, uint16_t potRaw, bool enabled) {
