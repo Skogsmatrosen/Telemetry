@@ -6,6 +6,7 @@ bool Accel::setup() {
     Wire.setPins(sdaPin, sclPin);
     Wire.begin();
     Wire.setClock(400000);
+    Wire.setTimeOut(10);              // kort timeout, så en skadet ledning ikke bremser styringen
 
     if (imu.beginI2C(i2cAddress) != BMI2_OK) {
         Serial.println("Error: BMI270 not connected, check wiring and I2C address!");
@@ -24,15 +25,25 @@ bool Accel::setup() {
         Serial.println("Error: Could not set accelerometer configuration!");
         return false;
     }
+    ok = true;
     return true;
 }
 
 bool Accel::update() {
+    if (!ok) return false;
+
     uint8_t status = 0;
-    if (imu.getStatus(&status) != BMI2_OK) return false;   // I2C-feil
-    if (!(status & BMI2_DRDY_ACC)) return false;            // ingen nye data ennå
-    
-    if (imu.getSensorData() != BMI2_OK) return false;
+    if (imu.getStatus(&status) != BMI2_OK) {
+        if (++errors >= 20) ok = false;     // gi opp IMU-en, behold styringen
+        return false;
+    }
+    if (!(status & BMI2_DRDY_ACC)) return false;
+
+    if (imu.getSensorData() != BMI2_OK) {
+        if (++errors >= 20) ok = false;
+        return false;
+    }
+    errors = 0;
 
     x = imu.data.accelX;
     y = imu.data.accelY;

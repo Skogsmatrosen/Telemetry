@@ -23,10 +23,10 @@ namespace Pin {
 
 // ---------- Kanaler på senderen (1–16) ----------
 namespace Ch {
-    constexpr uint8_t LEFT        = 1;   // Venstre hjul (ferdig mikset på senderen)
+    constexpr uint8_t LEFT        = 3;   // Venstre hjul (ferdig mikset på senderen)
     constexpr uint8_t RIGHT       = 2;   // Høyre hjul
     constexpr uint8_t MODE        = 6;
-    constexpr uint8_t FIRE        = 7;
+    constexpr uint8_t FIRE        = 9;
     constexpr uint8_t BATTLESHORT = 8;
     constexpr uint8_t WEAPON_POT  = 10;
 }

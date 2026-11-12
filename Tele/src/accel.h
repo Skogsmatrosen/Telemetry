@@ -14,6 +14,8 @@ private:
     int sclPin;
     uint8_t i2cAddress = BMI2_I2C_PRIM_ADDR; // 0x68
     //uint8_t i2cAddress = BMI2_I2C_SEC_ADDR; // 0x69
+    bool ok = false;
+    uint8_t errors = 0;
 public:
     Accel(int sda, int scl);
     bool setup();

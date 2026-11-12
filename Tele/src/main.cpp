@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <esp_task_wdt.h>
 #include "config.h"
 #include "accel.h"
 #include "battery.h"
@@ -24,6 +25,7 @@ Radio radio(Cfg::RECEIVER_MAC);
 // ---------- Tilstand ----------
 RobotMode mode = MODE_SAFE;
 bool batteryDead = false;
+bool startupLock = true;    // krever SAFE én gang etter oppstart
 uint32_t lastTelemetry = 0;
 
 // ---------- Hjelpefunksjoner ----------
@@ -38,6 +40,7 @@ bool switchOn(uint8_t channel) {
     return crsf.channel(channel) > Cfg::CRSF_CENTER;
 }
 
+// Til feilsøking på benken. Kallet i loop() er kommentert ut.
 void printStatus() {
     static uint32_t last = 0;
     if (millis() - last < 500) return;
@@ -46,18 +49,16 @@ void printStatus() {
     const char* modeName[]   = {"SAFE", "DRIVE", "DRIVE+WEAPON"};
     const char* weaponName[] = {"LOADED", "FIRING", "FAULT", "MANUAL"};
 
+    if (startupLock) Serial.println("Set mode switch to SAFE to unlock");
+
     Serial.printf("Link: %-4s | Mode: %-12s | Batt: %5.2f V%s\n",
                   crsf.linkUp() ? "OK" : "LOST",
                   modeName[mode],
                   battery.getVoltage(),
                   batteryDead ? " (DEAD)" : "");
-    Serial.printf("Left %4d us | Right %4d us | Weapon %4d us %s\n",
+    Serial.printf("Left %4d us | Right %4d us | Weapon %4d us %s\n\n",
                   drive.getLeftUs(), drive.getRightUs(),
                   weapon.getUs(), weaponName[weapon.getState()]);
-
-    // Midlertidig: vis alle kanalene for å finne ut hva som er hva
-    for (int i = 1; i <= 16; i++) Serial.printf("CH%d:%u ", i, crsf.channel(i));
-    Serial.println("\n");
 }
 
 // ---------- Setup ----------
@@ -77,34 +78,38 @@ void setup() {
     radio.setup();
 
     Serial.println("Robot ready, waiting for radio...");
+
+    // Watchdog: restarter ESP-en hvis loop() henger i mer enn 500 ms
+    esp_task_wdt_config_t wdt = {.timeout_ms = 500, .idle_core_mask = 0, .trigger_panic = true};
+    esp_task_wdt_reconfigure(&wdt);
+    esp_task_wdt_add(NULL);
 }
 
 // ---------- Loop ----------
 void loop() {
+    esp_task_wdt_reset();
+
     crsf.update();
     accel.update();
 
-    // 20 Hz: batteri og telemetri
-    if (millis() - lastTelemetry >= 50) {
-        lastTelemetry = millis();
-        battery.update();
-
-        TelemetryPacket p;
-        p.x = accel.getX();
-        p.y = accel.getY();
-        p.z = accel.getZ();
-        p.voltage = battery.getVoltage();
-        radio.send(p);
-    }
-
     // Sikkerhet
     bool link = crsf.linkUp();
-    mode = link ? readMode() : MODE_SAFE;
+    RobotMode requested = link ? readMode() : MODE_SAFE;
+
+    // Føreren har aktivt satt bryteren til SAFE (krever radioforbindelse)
+    bool driverSafe = link && requested == MODE_SAFE;
+
+    // Oppstartslås: boten kjører ikke før føreren har satt SAFE én gang
+    if (driverSafe) startupLock = false;
+    mode = startupLock ? MODE_SAFE : requested;
+
+    // SAFE nullstiller våpenfeil
+    if (driverSafe) weapon.resetFault();
 
     // Lavt batteri legger boten død. Slippes først når spenningen
-    // er tilbake OG føreren har satt modus til SAFE.
+    // er tilbake OG føreren har satt bryteren til SAFE.
     if (battery.isLow()) batteryDead = true;
-    if (batteryDead && !battery.isLow() && mode == MODE_SAFE) batteryDead = false;
+    if (batteryDead && !battery.isLow() && driverSafe) batteryDead = false;
 
     bool driveAllowed  = link && !batteryDead && mode != MODE_SAFE;
     bool weaponAllowed = link && !batteryDead && mode == MODE_DRIVE_WEAPON;
@@ -121,5 +126,30 @@ void loop() {
                   crsf.channel(Ch::WEAPON_POT),
                   weaponAllowed);
 
-    printStatus();
+    // 20 Hz: batteri og telemetri
+    if (millis() - lastTelemetry >= 50) {
+        lastTelemetry = millis();
+        battery.update();
+
+        TelemetryPacket p;
+        p.x = accel.getX();
+        p.y = accel.getY();
+        p.z = accel.getZ();
+        p.voltage = battery.getVoltage();
+
+        p.leftUs = drive.getLeftUs();
+        p.rightUs = drive.getRightUs();
+        p.weaponUs = weapon.getUs();
+        p.mode = mode;
+        p.weaponState = weapon.getState();
+
+        p.flags = 0;
+        if (link)        p.flags |= FLAG_LINK;
+        if (batteryDead) p.flags |= FLAG_BATTERY_DEAD;
+        if (startupLock) p.flags |= FLAG_STARTUP_LOCK;
+
+        radio.send(p);
+    }
+
+    // printStatus();
 }

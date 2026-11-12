@@ -22,6 +22,12 @@ bool Weapon::limitPressed() {
     return stable;
 }
 
+// Fart under fyring, styrt fra kontrolleren
+int Weapon::fireSpeed(uint16_t potRaw) const {
+    uint16_t pot = constrain(potRaw, potLow, Cfg::CRSF_MAX);
+    return map(pot, potLow, Cfg::CRSF_MAX, fireMinUs, fireMaxUs);
+}
+
 void Weapon::update(bool fireButton, bool battleshort, uint16_t potRaw, bool enabled) {
     bool pressed = limitPressed();
     bool newPress = fireButton && !lastFire;   // bare kanten, ikke mens knappen holdes
@@ -65,7 +71,7 @@ void Weapon::update(bool fireButton, bool battleshort, uint16_t potRaw, bool ena
         break;
 
     case FIRING:
-        esc.writeUs(runUs);
+        esc.writeUs(fireSpeed(potRaw));
         if (!pressed) switchReleased = true;            // har forlatt hvileposisjonen
         if (switchReleased && pressed) {                 // tilbake i ladet posisjon
             esc.stop();
@@ -77,7 +83,12 @@ void Weapon::update(bool fireButton, bool battleshort, uint16_t potRaw, bool ena
         break;
 
     case FAULT:
-        esc.stop();                    // står stille til battleshort eller resetFault()
+        esc.stop();
+        if (newPress) {                // nytt trykk = nytt forsøk
+            state = FIRING;
+            switchReleased = false;
+            fireStart = millis();
+        }
         break;
     }
 }

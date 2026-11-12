@@ -23,16 +23,18 @@ private:
     uint32_t stableSince = 0;
 
     // Manuell modus (battleshort)
-    bool manualReady = false;         // pot har vært i bunn siden manuell ble valgt
+    bool manualReady = false;         // stikka har vært i bunn siden manuell ble valgt
 
     // Innstillinger
-    int runUs = 1700;                 // motorfart under fyring
+    int fireMinUs = 1050;             // fart med stikka i bunn
+    int fireMaxUs = 2000;             // fart med stikka helt opp
     int manualMaxUs = 1600;           // maks fart i manuell modus
-    uint32_t timeoutMs = 2000;        // maks tid for én runde
+    uint32_t timeoutMs = 4000;        // maks tid for én runde
     uint32_t debounceMs = 10;
     uint16_t potLow = Cfg::CRSF_MIN + 60;
 
     bool limitPressed();
+    int fireSpeed(uint16_t potRaw) const;
 
 public:
     Weapon(int escPin, int limitPin);
